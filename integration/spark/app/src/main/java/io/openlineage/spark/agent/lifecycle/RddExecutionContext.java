@@ -16,6 +16,7 @@ import io.openlineage.spark.agent.facets.builder.SparkProcessingEngineRunFacetBu
 import io.openlineage.spark.agent.util.PathUtils;
 import io.openlineage.spark.agent.util.PlanUtils;
 import io.openlineage.spark.agent.util.ScalaConversionUtils;
+import io.openlineage.spark.builtin.scala.v1.FacetEmitter$;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -253,6 +254,7 @@ class RddExecutionContext implements ExecutionContext {
             .job(buildJob(jobEnd.jobId()))
             .build();
 
+    FacetEmitter$.MODULE$.markTerminatingEventSent();
     log.debug("Posting event for end {}: {}", jobEnd, event);
     eventEmitter.emit(event);
   }

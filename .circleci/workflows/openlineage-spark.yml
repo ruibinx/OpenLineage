@@ -1,6 +1,9 @@
 workflows:
   openlineage-spark:
     jobs:
+      - build-integration-spark-interfaces-scala:
+          requires:
+            - build-client-java
       - build-integration-spark:
           matrix:
             parameters:
@@ -8,6 +11,7 @@ workflows:
           requires:
            - build-integration-sql-java
            - build-client-java
+           - build-integration-spark-interfaces-scala
       - integration-test-databricks-integration-spark:
           context: integration-tests
           matrix:

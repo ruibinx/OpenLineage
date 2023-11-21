@@ -14,6 +14,8 @@ import io.openlineage.client.OpenLineage.JobFacet;
 import io.openlineage.client.OpenLineage.OutputDataset;
 import io.openlineage.client.OpenLineage.OutputDatasetFacet;
 import io.openlineage.client.OpenLineage.RunFacet;
+import io.openlineage.spark.agent.facets.builder.BuiltInJobFacetBuilder;
+import io.openlineage.spark.agent.facets.builder.BuiltInRunFacetBuilder;
 import io.openlineage.spark.agent.facets.builder.CustomEnvironmentFacetBuilder;
 import io.openlineage.spark.agent.facets.builder.DatabricksEnvironmentFacetBuilder;
 import io.openlineage.spark.agent.facets.builder.DebugRunFacetBuilder;
@@ -190,6 +192,7 @@ class InternalEventHandlerFactory implements OpenLineageEventHandlerFactory {
                 new ErrorFacetBuilder(),
                 new LogicalPlanRunFacetBuilder(context),
                 new DebugRunFacetBuilder(context),
+                new BuiltInRunFacetBuilder(context),
                 new SparkVersionFacetBuilder(context),
                 new SparkPropertyFacetBuilder(context),
                 new SparkProcessingEngineRunFacetBuilder(context));
@@ -204,7 +207,14 @@ class InternalEventHandlerFactory implements OpenLineageEventHandlerFactory {
   @Override
   public List<CustomFacetBuilder<?, ? extends JobFacet>> createJobFacetBuilders(
       OpenLineageContext context) {
-    return generate(eventHandlerFactories, factory -> factory.createJobFacetBuilders(context));
+    Builder<CustomFacetBuilder<?, ? extends JobFacet>> listBuilder;
+    listBuilder =
+        ImmutableList.<CustomFacetBuilder<?, ? extends JobFacet>>builder()
+            .addAll(
+                generate(eventHandlerFactories, factory -> factory.createJobFacetBuilders(context)))
+            .add(new BuiltInJobFacetBuilder(context));
+
+    return listBuilder.build();
   }
 
   @Override

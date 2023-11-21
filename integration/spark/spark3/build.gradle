@@ -58,6 +58,7 @@ ext {
 dependencies {
     api "io.openlineage:openlineage-java:${project.version}"
     api "io.openlineage:openlineage-sql-java:${project.version}"
+    api "io.openlineage:spark-interfaces-scala:${project.version}"
 
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
 

@@ -19,6 +19,7 @@ import io.openlineage.spark.agent.Versions;
 import io.openlineage.spark.agent.filters.EventFilterUtils;
 import io.openlineage.spark.agent.util.PlanUtils;
 import io.openlineage.spark.api.OpenLineageContext;
+import io.openlineage.spark.builtin.scala.v1.FacetEmitter$;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -118,6 +119,7 @@ class SparkSQLExecutionContext implements ExecutionContext {
       // expecting jobEnd event later on
       eventType = RUNNING;
     } else {
+      FacetEmitter$.MODULE$.markTerminatingEventSent();
       eventType = COMPLETE;
     }
     emittedOnSqlExecutionEnd = true;
@@ -249,6 +251,7 @@ class SparkSQLExecutionContext implements ExecutionContext {
       // still waiting for sqlExecutionEnd event which will emit COMPLETE event
       eventType = RUNNING;
     } else {
+      FacetEmitter$.MODULE$.markTerminatingEventSent();
       eventType = COMPLETE;
     }
     emittedOnJobEnd = true;

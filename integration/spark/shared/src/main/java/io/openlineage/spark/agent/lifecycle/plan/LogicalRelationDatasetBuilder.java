@@ -8,6 +8,7 @@ package io.openlineage.spark.agent.lifecycle.plan;
 import io.openlineage.client.OpenLineage;
 import io.openlineage.client.OpenLineage.DatasetFacetsBuilder;
 import io.openlineage.client.utils.DatasetIdentifier;
+import io.openlineage.spark.agent.lifecycle.plan.handlers.BuiltInLineageV1RelationHandler;
 import io.openlineage.spark.agent.lifecycle.plan.handlers.JdbcRelationHandler;
 import io.openlineage.spark.agent.util.PathUtils;
 import io.openlineage.spark.agent.util.PlanUtils;
@@ -15,6 +16,7 @@ import io.openlineage.spark.agent.util.ScalaConversionUtils;
 import io.openlineage.spark.api.AbstractQueryPlanDatasetBuilder;
 import io.openlineage.spark.api.DatasetFactory;
 import io.openlineage.spark.api.OpenLineageContext;
+import io.openlineage.spark.builtin.scala.v1.LineageRelation;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,6 +82,7 @@ public class LogicalRelationDatasetBuilder<D extends OpenLineage.Dataset>
     return x instanceof LogicalRelation
         && (((LogicalRelation) x).relation() instanceof HadoopFsRelation
             || ((LogicalRelation) x).relation() instanceof JDBCRelation
+            || ((LogicalRelation) x).relation() instanceof LineageRelation
             || ((LogicalRelation) x).catalogTable().isDefined());
   }
 
@@ -100,6 +103,8 @@ public class LogicalRelationDatasetBuilder<D extends OpenLineage.Dataset>
       return handleHadoopFsRelation(logRel);
     } else if (logRel.relation() instanceof JDBCRelation) {
       return new JdbcRelationHandler<>(datasetFactory).handleRelation(logRel);
+    } else if (logRel.relation() instanceof LineageRelation) {
+      return new BuiltInLineageV1RelationHandler<>(context, datasetFactory).handleRelation(logRel);
     }
     throw new IllegalArgumentException(
         "Expected logical plan to be either HadoopFsRelation, JDBCRelation, "

@@ -23,6 +23,7 @@ import io.openlineage.spark.agent.Versions;
 import io.openlineage.spark.agent.filters.EventFilterUtils;
 import io.openlineage.spark.api.OpenLineageContext;
 import io.openlineage.spark.api.OpenLineageEventHandlerFactory;
+import io.openlineage.spark.builtin.scala.v1.FacetEmitter$;
 import java.util.Optional;
 import org.apache.spark.scheduler.JobFailed;
 import org.apache.spark.scheduler.SparkListenerJobEnd;
@@ -76,6 +77,8 @@ public class SparkSQLExecutionContextTest {
         .hasFieldOrPropertyWithValue("eventType", EventType.START);
     assertThat(lineageEvent.getAllValues().get(1))
         .hasFieldOrPropertyWithValue("eventType", EventType.RUNNING);
+
+    assertThat(FacetEmitter$.MODULE$.isTerminatingEventSent()).isFalse();
   }
 
   @Test
@@ -114,6 +117,8 @@ public class SparkSQLExecutionContextTest {
         .hasFieldOrPropertyWithValue("eventType", EventType.RUNNING);
     assertThat(lineageEvent.getAllValues().get(3))
         .hasFieldOrPropertyWithValue("eventType", EventType.COMPLETE);
+
+    assertThat(FacetEmitter$.MODULE$.isTerminatingEventSent()).isTrue();
   }
 
   @Test

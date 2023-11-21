@@ -13,12 +13,15 @@ import com.google.common.collect.ImmutableMap.Builder;
 import io.openlineage.client.OpenLineage;
 import io.openlineage.client.OpenLineage.LifecycleStateChangeDatasetFacet.LifecycleStateChange;
 import io.openlineage.client.OpenLineage.OutputDataset;
+import io.openlineage.client.utils.DatasetIdentifier;
+import io.openlineage.spark.agent.util.BuiltInPlanUtils;
 import io.openlineage.spark.agent.util.DatasetFacetsUtils;
 import io.openlineage.spark.agent.util.PathUtils;
 import io.openlineage.spark.agent.util.PlanUtils;
 import io.openlineage.spark.agent.util.ScalaConversionUtils;
 import io.openlineage.spark.api.AbstractQueryPlanDatasetBuilder;
 import io.openlineage.spark.api.OpenLineageContext;
+import io.openlineage.spark.builtin.scala.v1.LineageRelationProvider;
 import java.net.URI;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -61,6 +64,7 @@ public class SaveIntoDataSourceCommandVisitor
         return false;
       }
       return command.dataSource() instanceof SchemaRelationProvider
+          || command.dataSource() instanceof LineageRelationProvider
           || command.dataSource() instanceof RelationProvider;
     }
     return false;
@@ -133,6 +137,20 @@ public class SaveIntoDataSourceCommandVisitor
     }
 
     SQLContext sqlContext = context.getSparkSession().get().sqlContext();
+
+    if (command.dataSource() instanceof LineageRelationProvider) {
+      LineageRelationProvider provider = (LineageRelationProvider) command.dataSource();
+      DatasetIdentifier datasetIdentifier =
+          provider.getLineageDatasetIdentifier(
+              BuiltInPlanUtils.context(context), sqlContext, command.options());
+      return Collections.singletonList(
+          outputDataset()
+              .getDataset(
+                  provider.getLineageDatasetIdentifier(
+                      BuiltInPlanUtils.context(context), sqlContext, command.options()),
+                  getSchema(command)));
+    }
+
     try {
       if (command.dataSource() instanceof RelationProvider) {
         RelationProvider p = (RelationProvider) command.dataSource();
