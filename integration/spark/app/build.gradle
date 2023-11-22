@@ -61,10 +61,10 @@ ext {
     assertjVersion = '3.24.2'
     bigqueryVersion = '0.26.0'
     sparkVersion = project.getProperty('spark.version')
-    postgresqlVersion = '42.2.19'
+    postgresqlVersion = '42.6.0'
     mockitoVersion = '4.11.0'
-    testcontainersVersion = '1.17.6'
-    junit5Version = '5.10.0'
+    testcontainersVersion = '1.19.2'
+    junit5Version = '5.10.1'
     shortVersion = sparkVersion.substring(0,3)
 
     versionsMap = [
@@ -118,13 +118,13 @@ dependencies {
         exclude group: 'org.apache.spark:spark-catalyst_2.11'
     }
 
-    testFixturesApi platform('org.junit:junit-bom:5.10.0')
+    testFixturesApi platform('org.junit:junit-bom:5.10.1')
     testFixturesApi "org.junit.jupiter:junit-jupiter:${junit5Version}"
     testFixturesApi "org.junit.jupiter:junit-jupiter-params:${junit5Version}"
 
     testFixturesApi "org.postgresql:postgresql:${postgresqlVersion}"
     testFixturesApi 'org.hamcrest:hamcrest-library:2.2'
-    testFixturesApi 'org.xerial:sqlite-jdbc:3.43.2.1'
+    testFixturesApi 'org.xerial:sqlite-jdbc:3.44.0.0'
     testFixturesApi "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testFixturesApi "org.testcontainers:postgresql:${testcontainersVersion}"
     testFixturesApi "org.testcontainers:mockserver:${testcontainersVersion}"

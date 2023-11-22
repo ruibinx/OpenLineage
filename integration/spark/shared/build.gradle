@@ -51,13 +51,13 @@ configurations {
 ext {
     assertjVersion = '3.24.2'
     bigqueryVersion = '0.29.0'
-    junit5Version = '5.10.0'
+    junit5Version = '5.10.1'
     sparkVersion = '2.4.8'
     sparkVersionShort = '2.4'
     snowflakeVersion = '2.9.3'
     postgresqlVersion = '42.6.0'
     mockitoVersion = '4.11.0'
-    testcontainersVersion = '1.19.1'
+    testcontainersVersion = '1.19.2'
 }
 
 dependencies {
@@ -82,13 +82,13 @@ dependencies {
     compileOnly "com.databricks:dbutils-api_2.11:0.0.5"
 
     // TODO: those fixtures should be cleaned in future PRs -> integration tests got moved to app
-    testFixturesApi platform('org.junit:junit-bom:5.10.0')
+    testFixturesApi platform('org.junit:junit-bom:5.10.1')
     testFixturesApi "org.junit.jupiter:junit-jupiter:${junit5Version}"
     testFixturesApi "org.junit.jupiter:junit-jupiter-params:${junit5Version}"
 
     testFixturesApi "org.postgresql:postgresql:${postgresqlVersion}"
     testFixturesApi 'org.hamcrest:hamcrest-library:2.2'
-    testFixturesApi 'org.xerial:sqlite-jdbc:3.43.2.2'
+    testFixturesApi 'org.xerial:sqlite-jdbc:3.44.0.0'
     testFixturesApi "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testFixturesApi "org.testcontainers:postgresql:${testcontainersVersion}"
     testFixturesApi "org.testcontainers:mockserver:${testcontainersVersion}"
