@@ -32,7 +32,7 @@ public class FlinkStatefulApplication {
         .process(new StatefulCounter())
         .name("process")
         .uid("process")
-        .sinkTo(aKafkaSink(parameters.getRequired("output-topic")))
+        .sinkTo(aKafkaSink(parameters.getRequired("output-topics")))
         .name("kafka-sink")
         .uid("kafka-sink");
 
