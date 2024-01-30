@@ -25,6 +25,7 @@ import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang3.concurrent.CircuitBreaker;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
@@ -62,6 +63,8 @@ public class OpenLineageSparkListener extends org.apache.spark.scheduler.SparkLi
   private final Function0<Option<SparkContext>> activeSparkContext =
       ScalaConversionUtils.toScalaFn(SparkContext$.MODULE$::getActive);
 
+  private static Optional<CircuitBreaker> circuitBreaker = Optional.empty();
+
   String sparkVersion = package$.MODULE$.SPARK_VERSION();
 
   private static final boolean isDisabled = checkIfDisabled();
@@ -78,6 +81,9 @@ public class OpenLineageSparkListener extends org.apache.spark.scheduler.SparkLi
       return;
     }
     initializeContextFactoryIfNotInitialized();
+    if (isCircuitBreakerClosed()) {
+      return;
+    }
     if (event instanceof SparkListenerSQLExecutionStart) {
       sparkSQLExecStart((SparkListenerSQLExecutionStart) event);
     } else if (event instanceof SparkListenerSQLExecutionEnd) {
@@ -108,6 +114,9 @@ public class OpenLineageSparkListener extends org.apache.spark.scheduler.SparkLi
       return;
     }
     initializeContextFactoryIfNotInitialized();
+    if (isCircuitBreakerClosed()) {
+      return;
+    }
     Optional<ActiveJob> activeJob =
         asJavaOptional(
                 SparkSession.getDefaultSession()
@@ -159,7 +168,7 @@ public class OpenLineageSparkListener extends org.apache.spark.scheduler.SparkLi
   /** called by the SparkListener when a job ends */
   @Override
   public void onJobEnd(SparkListenerJobEnd jobEnd) {
-    if (isDisabled) {
+    if (isDisabled || isCircuitBreakerClosed()) {
       return;
     }
     ExecutionContext context = rddExecutionRegistry.remove(jobEnd.jobId());
@@ -173,7 +182,7 @@ public class OpenLineageSparkListener extends org.apache.spark.scheduler.SparkLi
 
   @Override
   public void onTaskEnd(SparkListenerTaskEnd taskEnd) {
-    if (isDisabled || sparkVersion.startsWith("2")) {
+    if (isDisabled || sparkVersion.startsWith("2") || isCircuitBreakerClosed()) {
       return;
     }
     jobMetrics.addMetrics(taskEnd.stageId(), taskEnd.taskMetrics());
@@ -276,6 +285,8 @@ public class OpenLineageSparkListener extends org.apache.spark.scheduler.SparkLi
       try {
         ArgumentParser args = ArgumentParser.parse(sparkEnv.conf());
         contextFactory = new ContextFactory(new EventEmitter(args));
+        // TODO: extract circuit breaker
+        // circuitBreaker = args.getOpenLineageYaml().getFacetsConfig();
       } catch (URISyntaxException e) {
         log.error("Unable to parse open lineage endpoint. Lineage events will not be collected", e);
       }
@@ -284,6 +295,10 @@ public class OpenLineageSparkListener extends org.apache.spark.scheduler.SparkLi
           "Open lineage listener instantiated, but no configuration could be found. "
               + "Lineage events will not be collected");
     }
+  }
+
+  private boolean isCircuitBreakerClosed() {
+    return circuitBreaker.map(CircuitBreaker::isClosed).orElse(false);
   }
 
   private static boolean checkIfDisabled() {

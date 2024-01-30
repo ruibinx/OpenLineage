@@ -5,15 +5,19 @@
 
 package io.openlineage.client;
 
+import io.openlineage.client.circuitBreaker.CircuitBreaker;
 import io.openlineage.client.transports.ConsoleTransport;
 import io.openlineage.client.transports.Transport;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.graalvm.compiler.nodes.calc.IntegerDivRemNode.Op;
 
 /** HTTP client used to emit {@link OpenLineage.RunEvent}s to HTTP backend. */
 @Slf4j
 public final class OpenLineageClient {
   final Transport transport;
+  final Optional<CircuitBreaker> circuitBreaker;
   final String[] disabledFacets;
 
   /** Creates a new {@code OpenLineageClient} object. */
@@ -26,8 +30,13 @@ public final class OpenLineageClient {
   }
 
   public OpenLineageClient(@NonNull final Transport transport, String[] disabledFacets) {
+    this(transport, disabledFacets, null);
+  }
+
+  public OpenLineageClient(@NonNull final Transport transport, String[] disabledFacets, CircuitBreaker circuitBreaker) {
     this.transport = transport;
     this.disabledFacets = disabledFacets;
+    this.circuitBreaker = Optional.ofNullable(circuitBreaker);
 
     OpenLineageClientUtils.configureObjectMapper(disabledFacets);
   }
@@ -43,6 +52,7 @@ public final class OpenLineageClient {
       log.debug(
           "OpenLineageClient will emit lineage event: {}", OpenLineageClientUtils.toJson(runEvent));
     }
+    // TODO: verify circuit breaker
     transport.emit(runEvent);
   }
 
@@ -58,6 +68,7 @@ public final class OpenLineageClient {
           "OpenLineageClient will emit lineage event: {}",
           OpenLineageClientUtils.toJson(datasetEvent));
     }
+    // TODO: verify circuit breaker
     transport.emit(OpenLineageClientUtils.toJson(datasetEvent));
   }
 
@@ -72,6 +83,7 @@ public final class OpenLineageClient {
       log.debug(
           "OpenLineageClient will emit lineage event: {}", OpenLineageClientUtils.toJson(jobEvent));
     }
+    // TODO: verify circuit breaker
     transport.emit(OpenLineageClientUtils.toJson(jobEvent));
   }
 
